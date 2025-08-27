@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Daily Quote</title>
+  <title>Daily Scripture — Thai KJV</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: url('background.jpg') no-repeat center center fixed;
+      background: url('background.png') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       align-items: center;
@@ -21,7 +21,7 @@
       background: rgba(255, 255, 255, 0.85);
       border-radius: 16px;
       padding: 30px 40px;
-      max-width: 600px;
+      max-width: 700px;
       width: 100%;
       box-shadow: 0 6px 16px rgba(0,0,0,0.1);
       text-align: center;
@@ -50,40 +50,76 @@
       font-size: 1em;
       margin-top: 15px;
     }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #1e40af;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div class="box">
-    <h2>Today's Encouragement</h2>
+    <h2>Today's Encouragement (Thai KJV)</h2>
+    <div class="row">
+      <input id="reference" placeholder="Psalm 91:1" value="Psalm 91:1"/>
+      <input id="apiKey" type="password" placeholder="API.Bible Key"/>
+      <button onclick="loadVerse()">Fetch</button>
+    </div>
     <p id="quote">Loading...</p>
     <div class="ref" id="author"></div>
     <div class="error" id="error"></div>
   </div>
 
   <script>
-    async function loadQuote() {
+    const BIBLE_ID = "2eb94312ad61ae75-01"; // Thai KJV
+
+    async function loadVerse() {
+      const refInput = document.getElementById("reference").value.trim() || "Psalm 91:1";
+      const apiKey = document.getElementById("apiKey").value.trim();
       const quoteEl = document.getElementById("quote");
       const authorEl = document.getElementById("author");
       const errEl = document.getElementById("error");
 
-      try {
-        const res = await fetch("quotes.json");
-        if (!res.ok) throw new Error("File not found");
-        
-        const quotes = await res.json();
-        const randomIndex = Math.floor(Math.random() * quotes.length);
-        const q = quotes[randomIndex];
+      if (!apiKey) {
+        errEl.textContent = "⚠️ Please enter your API.Bible key.";
+        return;
+      }
 
-        quoteEl.textContent = q.quote;
-        authorEl.textContent = "— " + q.author;
+      try {
+        const res = await fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID}/passages?reference=${encodeURIComponent(refInput)}`, {
+          headers: { "api-key": apiKey }
+        });
+        if (!res.ok) throw new Error("API error " + res.status);
+        const data = await res.json();
+
+        const tmp = document.createElement("div");
+        tmp.innerHTML = data?.data?.content || "";
+
+        quoteEl.textContent = tmp.textContent.trim();
+        authorEl.textContent = "— " + (data?.data?.reference || refInput);
+        errEl.textContent = "";
       } catch (e) {
-        quoteEl.textContent = "⚠️ Unable to load quotes.";
+        quoteEl.textContent = "⚠️ Unable to load verse.";
         authorEl.textContent = "";
-        errEl.textContent = "Make sure quotes.json is in the same folder as index.html.";
+        errEl.textContent = e.message;
       }
     }
 
-    loadQuote();
+    // auto-load default verse
+    loadVerse();
   </script>
 </body>
 </html>
