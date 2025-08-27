@@ -1,1 +1,0 @@
-# Daily-Bible-Verse-Thai
