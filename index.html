@@ -3,284 +3,87 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Daily Scripture</title>
+  <title>Daily Quote</title>
   <style>
-    :root {
-      --brand: #1e40af;
-      --ink: #1f2937;
-      --muted: #6b7280;
-      --danger: #b91c1c;
-      --glass: rgba(255, 255, 255, 0.85);
-    }
-    * { box-sizing: border-box; }
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: url('background.png') no-repeat center center fixed;
+      font-family: Arial, sans-serif;
+      background: url('background.jpg') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      height: 100vh;
       margin: 0;
       padding: 20px;
     }
+
     .box {
-      background: var(--glass);
+      background: rgba(255, 255, 255, 0.85);
       border-radius: 16px;
-      padding: 28px;
-      max-width: 720px;
+      padding: 30px 40px;
+      max-width: 600px;
       width: 100%;
       box-shadow: 0 6px 16px rgba(0,0,0,0.1);
       text-align: center;
       backdrop-filter: blur(4px);
     }
+
     h2 {
-      color: var(--brand);
-      margin: 0 0 16px;
+      color: #1e40af;
+      margin-bottom: 20px;
     }
-    p#quote {
-      font-size: 1.25rem;
-      color: var(--ink);
+
+    p {
+      font-size: 1.3em;
+      color: #1f2937;
       white-space: pre-wrap;
-      margin: 8px 0 6px;
-      line-height: 1.55;
     }
+
     .ref {
-      margin-top: 6px;
+      margin-top: 15px;
       font-weight: bold;
-      color: var(--muted);
+      color: #6b7280;
     }
+
     .error {
-      color: var(--danger);
-      font-size: 0.95rem;
-      margin-top: 12px;
-      min-height: 1.2em;
-    }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin: 12px 0;
-    }
-    .row-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      margin: 12px 0;
-    }
-    label {
-      display: block;
-      text-align: left;
-      font-size: 0.9rem;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    input, select, button, textarea {
-      width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 1rem;
-    }
-    button {
-      background: var(--brand);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      transition: transform .02s ease-in-out, opacity .2s;
-    }
-    button:hover { opacity: 0.96; }
-    button:active { transform: translateY(1px); }
-    .btn-secondary {
-      background: #374151;
-    }
-    .hint {
-      font-size: 0.85rem;
-      color: var(--muted);
-      text-align: left;
-      margin-top: 4px;
-    }
-    .controls { margin-top: 6px; }
-    .pill {
-      display: inline-block;
-      background: #eef2ff;
-      color: #3730a3;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      margin-left: 6px;
+      color: #b91c1c;
+      font-size: 1em;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
   <div class="box">
-    <h2>Today's Encouragement <span class="pill">WEB/KJV/TNCV</span></h2>
-
-    <div class="row">
-      <div>
-        <label for="reference">Reference (e.g., Psalm 91:1 or John 3:16–18)</label>
-        <input id="reference" placeholder="Psalm 91:1" value="Psalm 91:1"/>
-      </div>
-      <div>
-        <label for="translation">Translation Source</label>
-        <select id="translation">
-          <option value="web">WEB (bible-api.com)</option>
-          <option value="kjv">KJV (bible-api.com)</option>
-          <option value="tncv">TNCV (API.Bible)</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="apibible-opts" style="display:none;">
-      <div class="row">
-        <div>
-          <label for="apiKey">API.Bible Key (stored locally)</label>
-          <input id="apiKey" type="password" placeholder="paste your API key here"/>
-          <div class="hint">Find this in your API.Bible dashboard after signing in.</div>
-        </div>
-        <div>
-          <label for="bibleId">TNCV Bible ID</label>
-          <input id="bibleId" placeholder="e.g., 1234abcd..."/>
-          <div class="hint">Look up the TNCV Bible ID via the /v1/bibles endpoint (language=tha, abbreviation=TNCV).</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="controls row-3">
-      <button id="fetchBtn">Fetch Verse</button>
-      <button id="randomBtn" class="btn-secondary">Random from quotes.json</button>
-      <button id="saveBtn" class="btn-secondary">Save API.Bible Settings</button>
-    </div>
-
-    <p id="quote">Choose a translation and click "Fetch Verse"…</p>
+    <h2>Today's Encouragement</h2>
+    <p id="quote">Loading...</p>
     <div class="ref" id="author"></div>
     <div class="error" id="error"></div>
   </div>
 
   <script>
-    const els = {
-      ref: document.getElementById('reference'),
-      trans: document.getElementById('translation'),
-      apiKey: document.getElementById('apiKey'),
-      bibleId: document.getElementById('bibleId'),
-      quote: document.getElementById('quote'),
-      author: document.getElementById('author'),
-      error: document.getElementById('error'),
-      apibibleOpts: document.getElementById('apibible-opts'),
-      fetchBtn: document.getElementById('fetchBtn'),
-      randomBtn: document.getElementById('randomBtn'),
-      saveBtn: document.getElementById('saveBtn'),
-    };
-
-    // Restore saved settings
-    (function init() {
-      const savedKey = localStorage.getItem('api_bible_key') || '';
-      const savedBibleId = localStorage.getItem('api_bible_id') || '';
-      if (savedKey) els.apiKey.value = savedKey;
-      if (savedBibleId) els.bibleId.value = savedBibleId;
-      updateVisibility();
-    })();
-
-    function updateVisibility() {
-      const v = els.trans.value;
-      els.apibibleOpts.style.display = (v === 'tncv') ? 'block' : 'none';
-    }
-    els.trans.addEventListener('change', updateVisibility);
-
-    els.saveBtn.addEventListener('click', () => {
-      localStorage.setItem('api_bible_key', els.apiKey.value.trim());
-      localStorage.setItem('api_bible_id', els.bibleId.value.trim());
-      showSuccess('Saved API.Bible settings locally.');
-    });
-
-    function showSuccess(msg) {
-      els.error.style.color = '#047857'; // green
-      els.error.textContent = msg;
-      setTimeout(() => { els.error.textContent = ''; els.error.style.color = ''; }, 2200);
-    }
-
-    function setStatus({text, author = '', error = ''}) {
-      els.quote.textContent = text;
-      els.author.textContent = author ? '— ' + author : '';
-      els.error.style.color = '';
-      els.error.textContent = error;
-    }
-
-    async function fetchBibleApi(reference, translation) {
-      const url = 'https://bible-api.com/' + encodeURIComponent(reference) + '?translation=' + encodeURIComponent(translation);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('bible-api.com: ' + res.status + ' ' + res.statusText);
-      const data = await res.json();
-      return { text: (data.text || '').trim(), reference: data.reference || reference };
-    }
-
-    async function fetchApiBible(reference, key, bibleId) {
-      const url = `https://api.scripture.api.bible/v1/bibles/${encodeURIComponent(bibleId)}/passages?reference=${encodeURIComponent(reference)}`;
-      const res = await fetch(url, { headers: { 'api-key': key } });
-      if (!res.ok) throw new Error('API.Bible: ' + res.status + ' ' + res.statusText);
-      const data = await res.json();
-      // content is HTML, convert to plain text
-      const tmp = document.createElement('div');
-      tmp.innerHTML = (data?.data?.content) || '';
-      const text = tmp.textContent.trim();
-      const ref = data?.data?.reference || reference;
-      return { text, reference: ref };
-    }
-
-    async function handleFetch() {
-      setStatus({ text: 'Loading…', author: '' });
-      const reference = els.ref.value.trim() || 'Psalm 91:1';
-      const mode = els.trans.value;
+    async function loadQuote() {
+      const quoteEl = document.getElementById("quote");
+      const authorEl = document.getElementById("author");
+      const errEl = document.getElementById("error");
 
       try {
-        if (mode === 'web' || mode === 'kjv') {
-          const result = await fetchBibleApi(reference, mode);
-          setStatus({ text: result.text, author: result.reference });
-          return;
-        }
-        if (mode === 'tncv') {
-          const key = els.apiKey.value.trim();
-          const bibleId = els.bibleId.value.trim();
-          if (!key || !bibleId) {
-            throw new Error('Enter API.Bible Key and TNCV Bible ID, then click Save.');
-          }
-          const result = await fetchApiBible(reference, key, bibleId);
-          setStatus({ text: result.text, author: result.reference });
-          return;
-        }
-        throw new Error('Unknown translation option.');
+        const res = await fetch("quotes.json");
+        if (!res.ok) throw new Error("File not found");
+        
+        const quotes = await res.json();
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        const q = quotes[randomIndex];
+
+        quoteEl.textContent = q.quote;
+        authorEl.textContent = "— " + q.author;
       } catch (e) {
-        // graceful fallback: try local quotes.json for something encouraging
-        try {
-          const qres = await fetch('quotes.json');
-          if (qres.ok) {
-            const arr = await qres.json();
-            const q = arr[Math.floor(Math.random() * arr.length)];
-            setStatus({ text: q.quote, author: q.author, error: e.message + ' — showing a local quote instead.' });
-            return;
-          }
-        } catch (_) {}
-        setStatus({ text: '⚠️ Unable to fetch scripture.', author: '', error: e.message });
+        quoteEl.textContent = "⚠️ Unable to load quotes.";
+        authorEl.textContent = "";
+        errEl.textContent = "Make sure quotes.json is in the same folder as index.html.";
       }
     }
 
-    async function handleRandomLocal() {
-      try {
-        const res = await fetch('quotes.json');
-        if (!res.ok) throw new Error('quotes.json not found');
-        const arr = await res.json();
-        const q = arr[Math.floor(Math.random() * arr.length)];
-        setStatus({ text: q.quote, author: q.author });
-      } catch (e) {
-        setStatus({ text: '⚠️ Unable to load quotes.', author: '', error: 'Make sure quotes.json is in the same folder as index.html.' });
-      }
-    }
-
-    els.fetchBtn.addEventListener('click', handleFetch);
-    els.randomBtn.addEventListener('click', handleRandomLocal);
-
-    // Auto-load first verse on page open
-    handleFetch();
+    loadQuote();
   </script>
 </body>
 </html>
