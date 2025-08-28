@@ -75,7 +75,6 @@
     <h2>Today's Encouragement (Thai KJV)</h2>
     <div class="row">
       <input id="reference" placeholder="Psalm 91:1" value="Psalm 91:1"/>
-      <input id="apiKey" type="password" placeholder="API.Bible Key"/>
       <button onclick="loadVerse()">Fetch</button>
     </div>
     <p id="quote">Loading...</p>
@@ -85,22 +84,17 @@
 
   <script>
     const BIBLE_ID = "2eb94312ad61ae75-01"; // Thai KJV
+    const API_KEY = "4b6fd781fc59313a24173e903932ed12"; // fixed API key
 
     async function loadVerse() {
       const refInput = document.getElementById("reference").value.trim() || "Psalm 91:1";
-      const apiKey = document.getElementById("apiKey").value.trim();
       const quoteEl = document.getElementById("quote");
       const authorEl = document.getElementById("author");
       const errEl = document.getElementById("error");
 
-      if (!apiKey) {
-        errEl.textContent = "⚠️ Please enter your API.Bible key.";
-        return;
-      }
-
       try {
         const res = await fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID}/passages?reference=${encodeURIComponent(refInput)}`, {
-          headers: { "api-key": apiKey }
+          headers: { "api-key": API_KEY }
         });
         if (!res.ok) throw new Error("API error " + res.status);
         const data = await res.json();
