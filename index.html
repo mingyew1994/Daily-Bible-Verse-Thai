@@ -3,117 +3,76 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Daily Scripture — Thai KJV</title>
+  <title>Daily Scripture — Thai KJV (Random)</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: url('background.png') no-repeat center center fixed;
-      background-size: cover;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .box {
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 16px;
-      padding: 30px 40px;
-      max-width: 700px;
-      width: 100%;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-      text-align: center;
-      backdrop-filter: blur(4px);
-    }
-
-    h2 {
-      color: #1e40af;
-      margin-bottom: 20px;
-    }
-
-    p {
-      font-size: 1.3em;
-      color: #1f2937;
-      white-space: pre-wrap;
-    }
-
-    .ref {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #6b7280;
-    }
-
-    .error {
-      color: #b91c1c;
-      font-size: 1em;
-      margin-top: 15px;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #1e40af;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-    }
+    body { font-family: Arial, sans-serif; background: url('background.png') no-repeat center center fixed; background-size: cover; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; }
+    .box { background: rgba(255, 255, 255, 0.85); border-radius: 16px; padding: 30px 40px; max-width: 760px; width: 100%; box-shadow: 0 6px 16px rgba(0,0,0,0.1); text-align: center; backdrop-filter: blur(4px); }
+    h2 { color: #1e40af; margin: 0 0 14px; }
+    p#quote { font-size: 1.25em; color: #1f2937; white-space: pre-wrap; margin: 8px 0 6px; line-height: 1.55; }
+    .ref { margin-top: 6px; font-weight: bold; color: #6b7280; }
+    .error { color: #b91c1c; font-size: 0.95em; margin-top: 12px; min-height: 1.2em; }
+    .sub { color: #6b7280; font-size: .95rem; margin-bottom: 10px; }
   </style>
 </head>
 <body>
   <div class="box">
     <h2>Today's Encouragement (Thai KJV)</h2>
-    <div class="row">
-      <input id="reference" placeholder="Psalm 91:1" value="Psalm 91:1"/>
-      <button onclick="loadVerse()">Fetch</button>
-    </div>
-    <p id="quote">Loading...</p>
+    <div class="sub">Random verse via OurManna → fetched from API.Bible (Thai KJV)</div>
+    <p id="quote">Loading random verse…</p>
     <div class="ref" id="author"></div>
     <div class="error" id="error"></div>
   </div>
 
   <script>
     const BIBLE_ID = "2eb94312ad61ae75-01"; // Thai KJV
-    const API_KEY = "4b6fd781fc59313a24173e903932ed12"; // fixed API key
+    const API_KEY = "4b6fd781fc59313a24173e903932ed12"; // your API.Bible key
 
-    async function loadVerse() {
-      const refInput = document.getElementById("reference").value.trim() || "Psalm 91:1";
-      const quoteEl = document.getElementById("quote");
-      const authorEl = document.getElementById("author");
-      const errEl = document.getElementById("error");
+    const els = {
+      quote: document.getElementById('quote'),
+      author: document.getElementById('author'),
+      error: document.getElementById('error')
+    };
 
+    function setStatus({text, author = '', error = ''}) {
+      els.quote.textContent = text;
+      els.author.textContent = author ? '— ' + author : '';
+      els.error.textContent = error;
+    }
+
+    async function getRandomReference() {
+      const url = 'https://beta.ourmanna.com/api/v1/get/?format=json&order=random&t=' + Date.now();
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('OurManna error ' + res.status);
+      const data = await res.json();
+      const ref = data?.verse?.details?.reference || data?.verse?.details?.referenceText || '';
+      if (!ref) throw new Error('Reference not found in OurManna response');
+      return ref;
+    }
+
+    async function fetchThaiKJV(reference) {
+      const url = `https://api.scripture.api.bible/v1/bibles/${encodeURIComponent(BIBLE_ID)}/passages?reference=${encodeURIComponent(reference)}`;
+      const res = await fetch(url, { headers: { 'api-key': API_KEY } });
+      if (!res.ok) throw new Error('API.Bible error ' + res.status);
+      const data = await res.json();
+      const tmp = document.createElement('div');
+      tmp.innerHTML = data?.data?.content || '';
+      const text = tmp.textContent.trim();
+      const refOut = data?.data?.reference || reference;
+      return { text, reference: refOut };
+    }
+
+    async function loadRandomThaiKJV() {
       try {
-        const res = await fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID}/passages?reference=${encodeURIComponent(refInput)}`, {
-          headers: { "api-key": API_KEY }
-        });
-        if (!res.ok) throw new Error("API error " + res.status);
-        const data = await res.json();
-
-        const tmp = document.createElement("div");
-        tmp.innerHTML = data?.data?.content || "";
-
-        quoteEl.textContent = tmp.textContent.trim();
-        authorEl.textContent = "— " + (data?.data?.reference || refInput);
-        errEl.textContent = "";
+        const ref = await getRandomReference();
+        const result = await fetchThaiKJV(ref);
+        setStatus({ text: result.text, author: result.reference, error: '' });
       } catch (e) {
-        quoteEl.textContent = "⚠️ Unable to load verse.";
-        authorEl.textContent = "";
-        errEl.textContent = e.message;
+        setStatus({ text: '⚠️ Unable to load verse.', author: '', error: e.message });
       }
     }
 
-    // auto-load default verse
-    loadVerse();
+    // Run automatically on page load
+    loadRandomThaiKJV();
   </script>
 </body>
 </html>
